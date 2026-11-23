@@ -1,6 +1,6 @@
 # Сборка и упаковка Union-плагина
 
-Рецепт проверен в GitHub Actions для Gothic II «Ночь Ворона» на Windows x86. Пример использует Visual Studio 2022, CMake и Git.
+Рецепт проверен в GitHub Actions на примере Odyssee Quest Inspector 1.0.7 для Gothic II «Ночь Ворона» на Windows x86. Пример использует Visual Studio 2022, CMake и Git.
 
 | Зависимость | Ревизия примера |
 | --- | --- |
@@ -13,10 +13,22 @@
 ```powershell
 git clone https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector.git
 Set-Location OdysseeQuestInspector
-git checkout --detach 180e38e05d50d66dcf1ba702e3c10e4dd01b9fab
+git checkout --detach c6cacbd167837afe84364069ecc25a29e97bca81
 .\Build-Windows.ps1
 ```
 
-Скрипт выбирает закрепленную ревизию шаблона, обновляет его подмодули и собирает конфигурацию `Release` с `-G "Visual Studio 17 2022" -A Win32 -DGOTHIC_API_G2A=ON`. Результат в `release/OdysseeQuestInspector.vdf`. [Скрипт сборки](https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector/blob/180e38e05d50d66dcf1ba702e3c10e4dd01b9fab/Build-Windows.ps1)
+Скрипт выбирает закрепленную ревизию шаблона, обновляет его подмодули и собирает конфигурацию `Release` с `-G "Visual Studio 17 2022" -A Win32 -DGOTHIC_API_G2A=ON`. Результат в `release/OdysseeQuestInspector.vdf`. Номер версии из сценария попадает в ресурс DLL. При выпуске синхронизируй его с номером, который выводит журнал. [Скрипт сборки](https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector/blob/c6cacbd167837afe84364069ecc25a29e97bca81/Build-Windows.ps1)
 
-Внутри VDF примера DLL плагина и `UnionAPI.dll` находятся в `SYSTEM/AUTORUN`, а скомпилированная текстура в `_WORK/DATA/TEXTURES/_COMPILED`. При переносе в другой проект сверяй содержимое с его зависимостями и ресурсами. При закрытой игре установи VDF в `Gothic II/Data` и запусти игру с Union. [Рабочий прогон сборки и упаковки](https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector/actions/runs/45122695698)
+Внутри VDF версии 1.0.7 находятся DLL плагина и `UnionAPI.dll` в `SYSTEM/AUTORUN`, а также три текстуры для панели, бегунка и резервного курсора в `_WORK/DATA/TEXTURES/_COMPILED`. Если берешь сборку из Actions, сверяй SHA коммита, версию DLL и содержимое VDF. При закрытой игре замени предыдущий VDF в той папке, откуда его загружает Union. В пользовательской установке это был `Gothic II\Data\Plugins`. После запуска сверь номер в углу журнала. [Артефакт и Windows-прогон](https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector/actions/runs/45235472806)
+
+## Windows-тест мыши
+
+Из корня репозитория плагина выполни команды в Windows. Тест компилирует тот же обработчик мыши, который использует плагин.
+
+```powershell
+cmake -S tests/win32 -B win32-mouse-test -G "Visual Studio 17 2022" -A Win32
+cmake --build win32-mouse-test --config Release
+ctest --test-dir win32-mouse-test -C Release --output-on-failure
+```
+
+Тест открывает окно и отправляет ввод через `SendInput`. Он проверяет доставку движения, клика и прокрутки, в том числе движение при остановленном основном потоке. Связку с ZenGin, отрисовку и плавность проверяй в самой игре. [Исходник теста](https://github.com/piratvasyamorexod-alt/OdysseeQuestInspector/blob/c6cacbd167837afe84364069ecc25a29e97bca81/tests/win32/journal_mouse.cpp) · [Сценарии проверки](mouse-input.md#как-повторить-проверку)
